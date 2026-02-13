@@ -11,13 +11,14 @@ if __name__ == "__main__":
     arguments = arg_parser.parse_args()
     ll = arguments.ll
     spn = arguments.spn
-    print(ll, spn)
 
     app = QApplication(sys.argv)
     window = Window()
 
     image = image_from_params(ll=ll, spn=spn)
     window.set_image(image)
+    window.ll = ll
+    window.spn = spn
 
     window.show()
     sys.exit(app.exec())

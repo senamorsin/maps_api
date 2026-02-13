@@ -29,9 +29,7 @@ def image_from_params(**params) -> bytes:
     """Получение изображения по параметрам"""
 
     params['apikey'] = static_key
-    print(params)
     response = requests.get(static_server, params=params)
-    print(response.url)
     if not response:
         raise RuntimeError(f'Ошибка при выполнении запроса: {response.status_code} {response.reason}')
     return response.content
