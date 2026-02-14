@@ -6,8 +6,13 @@ import sys
 
 if __name__ == "__main__":
     arg_parser = ArgumentParser()
-    arg_parser.add_argument("-l", "--ll", required=True, help="longitude and latitude")
-    arg_parser.add_argument("-s", "--spn", required=True, help="span")
+    arg_parser.add_argument("-l", "--ll",
+                            help="longitude and latitude",
+                            default='30,59')
+    arg_parser.add_argument("-s", "--spn",
+                            help="span",
+                            default='1,1')
+
     arguments = arg_parser.parse_args()
     ll = arguments.ll
     spn = arguments.spn

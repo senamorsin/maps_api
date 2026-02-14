@@ -22,12 +22,12 @@ def ll_from_address(address: str) -> str:
     if not features:
         raise RuntimeError('Адрес не найден')
     most_relevant = features[0]
-    return most_relevant['GeoObject']['Point']['pos']
+    return most_relevant['GeoObject']['Point']['pos'].replace(' ', ',')
 
 
 def image_from_params(**params) -> bytes:
     """Получение изображения по параметрам"""
-
+    print(params)
     params['apikey'] = static_key
     response = requests.get(static_server, params=params)
     print(response.reason)
