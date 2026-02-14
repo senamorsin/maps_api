@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMainWindow, QLabel
+from PyQt6.QtWidgets import QMainWindow, QLabel, QCheckBox
 from PyQt6.QtGui import QPixmap
 from request_funcs import image_from_params
 from PyQt6.QtCore import Qt
@@ -10,9 +10,15 @@ class Window(QMainWindow):
 
         self.setWindowTitle("Maps.API мучения")
         self.setGeometry(100, 100, 1000, 800)
+        self.theme = 'light'
         self.image_label = QLabel(self)
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.image_label.setGeometry(50, 50, 900, 700)
+        self.image_label.setGeometry(50, 50, 700, 500)
+
+        self.theme_switch = QCheckBox('Темная тема', self)
+        self.theme_switch.setGeometry(800, 50, 150, 30)
+        self.theme_switch.stateChanged.connect(self.on_theme_change)
+        self.theme_switch.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         
         self.ll = None
         self.spn = None
@@ -30,24 +36,55 @@ class Window(QMainWindow):
             if float(self.spn.split(',')[0]) < 10:
                 spn = self.spn.split(',')
                 self.spn = f'{float(spn[0]) + 0.5},{float(spn[1]) + 0.5}'
-                new_image = image_from_params(ll=self.ll, spn=self.spn)
+                new_image = image_from_params(ll=self.ll, spn=self.spn, theme = self.theme)
                 self.set_image(new_image)
         elif symbol == Qt.Key.Key_PageDown:
             if float(self.spn.split(',')[0]) > 0.6:
                 spn = self.spn.split(',')
                 self.spn = f'{float(spn[0]) - 0.5},{float(spn[1]) - 0.5}'
-                new_image = image_from_params(ll=self.ll, spn=self.spn)
+                new_image = image_from_params(ll=self.ll, spn=self.spn, theme=self.theme)
                 self.set_image(new_image)
             else:
                 if float(self.spn.split(',')[0]) > 0.11:
                     spn = self.spn.split(',')
                     self.spn = f'{float(spn[0]) - 0.1},{float(spn[1]) - 0.1}'
-                    new_image = image_from_params(ll=self.ll, spn=self.spn)
+                    new_image = image_from_params(ll=self.ll, spn=self.spn, theme=self.theme)
                     self.set_image(new_image)
                 else:
                     if float(self.spn.split(',')[0]) > 0.015:
                         spn = self.spn.split(',')
                         self.spn = f'{float(spn[0]) - 0.01},{float(spn[1]) - 0.01}'
-                        new_image = image_from_params(ll=self.ll, spn=self.spn)
+                        new_image = image_from_params(ll=self.ll, spn=self.spn, theme=self.theme)
                         self.set_image(new_image)
-        print(self.spn)
+        elif symbol == Qt.Key.Key_Left:
+            ll = self.ll.split(',')
+            if float(self.ll.split(',')[0]) > -175:
+                self.ll = f'{float(ll[0]) - float(self.spn.split(',')[0]) / 2},{float(ll[1])}'
+                new_image = image_from_params(ll=self.ll, spn=self.spn)
+                self.set_image(new_image)
+        elif symbol == Qt.Key.Key_Right:
+            if float(self.ll.split(',')[0]) < 175:
+                ll = self.ll.split(',')
+                self.ll = f'{float(ll[0]) + float(self.spn.split(',')[0]) / 2},{float(ll[1])}'
+                new_image = image_from_params(ll=self.ll, spn=self.spn, theme=self.theme)
+                self.set_image(new_image)
+        elif symbol == Qt.Key.Key_Up:
+            if float(self.ll.split(',')[1]) < 85:
+                ll = self.ll.split(',')
+                self.ll = f'{float(ll[0])},{float(ll[1]) + float(self.spn.split(',')[1]) / 2}'
+                new_image = image_from_params(ll=self.ll, spn=self.spn, theme=self.theme)
+                self.set_image(new_image)
+        elif symbol == Qt.Key.Key_Down:
+            if float(self.ll.split(',')[1]) > -85:
+                ll = self.ll.split(',')
+                self.ll = f'{float(ll[0])},{float(ll[1]) - float(self.spn.split(',')[1]) / 2}'
+                new_image = image_from_params(ll=self.ll, spn=self.spn, theme=self.theme)
+                self.set_image(new_image)
+
+    def on_theme_change(self):
+        if self.theme == 'light':
+            self.theme = 'dark'
+        else:
+            self.theme = 'light'
+        new_image = image_from_params(ll=self.ll, spn=self.spn, theme=self.theme)
+        self.set_image(new_image)
