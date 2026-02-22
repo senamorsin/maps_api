@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QMainWindow, QLabel, QCheckBox, QLineEdit, QPushButton
 from PyQt6.QtGui import QPixmap
-from request_funcs import image_from_params, ll_from_address
+from request_funcs import image_from_params, ll_from_address, full_adderss_from_geocode
 from PyQt6.QtCore import Qt
 
 
@@ -18,7 +18,6 @@ class Window(QMainWindow):
         self.theme_switch = QCheckBox('Темная тема', self)
         self.theme_switch.setGeometry(800, 50, 150, 30)
         self.theme_switch.stateChanged.connect(self.on_theme_change)
-        self.theme_switch.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.address_edit = QLineEdit(self)
         self.address_edit.setGeometry(800, 100, 150, 30)
@@ -28,7 +27,18 @@ class Window(QMainWindow):
         self.search_button.setGeometry(800, 150, 150, 30)
         self.search_button.clicked.connect(self.on_search)
 
-        self.marks = ['30,59,pm2dgl']   
+        self.clear_marks_button = QPushButton("Очистить метки", self)
+        self.clear_marks_button.setGeometry(800, 200, 150, 30)
+        self.clear_marks_button.clicked.connect(self.on_clear_marks)
+
+        self.full_address = QLabel(self)
+        self.full_address.setGeometry(50, 560, 700, 30)
+        self.full_address.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.add_index_switch = QCheckBox('Индекс', self)
+        self.add_index_switch.setGeometry(800, 250, 150, 30)
+
+        self.marks = ['']   
         self.ll = None
         self.spn = None
 
@@ -100,8 +110,6 @@ class Window(QMainWindow):
     
     def on_search(self):
         address = self.address_edit.text()
-        self.address_edit.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.search_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.setFocus()
         if address:
             ll = ll_from_address(address)
@@ -111,3 +119,12 @@ class Window(QMainWindow):
                 self.spn = '0.005,0.005'
                 new_image = image_from_params(ll=self.ll, spn=self.spn, theme=self.theme, pt='~'.join(self.marks))
                 self.set_image(new_image)
+        self.full_address.setText(f'Полный адрес: {full_adderss_from_geocode(self.address_edit.text(), add_mail_index=self.add_index_switch.isChecked())}')
+    
+    def on_clear_marks(self):
+        self.marks = ['']
+        new_image = image_from_params(ll=self.ll, spn=self.spn, theme=self.theme, pt='~'.join(self.marks))
+        self.set_image(new_image)
+        self.address_edit.setText('')
+        self.full_address.setText('')
+        self.setFocus()
