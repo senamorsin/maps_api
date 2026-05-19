@@ -121,6 +121,30 @@ class Window(QMainWindow):
                 self.set_image(new_image)
         self.full_address.setText(f'Полный адрес: {full_adderss_from_geocode(self.address_edit.text(), add_mail_index=self.add_index_switch.isChecked())}')
     
+    def mousePressEvent(self, event):
+        if event.button() != Qt.MouseButton.LeftButton:
+            return
+        if self.ll is None or self.spn is None:
+            return
+        pos = event.position().toPoint()
+        label_geom = self.image_label.geometry()
+        if not label_geom.contains(pos):
+            return
+        x = pos.x() - label_geom.x()
+        y = pos.y() - label_geom.y()
+        w = label_geom.width()
+        h = label_geom.height()
+        center_lon, center_lat = map(float, self.ll.split(','))
+        spn_x, spn_y = map(float, self.spn.split(','))
+        new_lon = center_lon + (x - w / 2) / w * spn_x
+        new_lat = center_lat - (y - h / 2) / h * spn_y
+        new_ll = f'{new_lon},{new_lat}'
+        self.marks = [f'{new_ll},pm2dgl']
+        new_image = image_from_params(ll=self.ll, spn=self.spn, theme=self.theme, pt='~'.join(self.marks))
+        self.set_image(new_image)
+        self.full_address.setText(f'Полный адрес: {full_adderss_from_geocode(new_ll, add_mail_index=self.add_index_switch.isChecked())}')
+        self.setFocus()
+
     def on_clear_marks(self):
         self.marks = ['']
         new_image = image_from_params(ll=self.ll, spn=self.spn, theme=self.theme, pt='~'.join(self.marks))
