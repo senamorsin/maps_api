@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QMainWindow, QLabel, QCheckBox, QLineEdit, QPushButton
 from PyQt6.QtGui import QPixmap
-from request_funcs import image_from_params, ll_from_address, full_adderss_from_geocode
+from request_funcs import image_from_params, ll_from_address, full_adderss_from_geocode, organization_at_point
 from PyQt6.QtCore import Qt
 
 
@@ -121,15 +121,10 @@ class Window(QMainWindow):
                 self.set_image(new_image)
         self.full_address.setText(f'Полный адрес: {full_adderss_from_geocode(self.address_edit.text(), add_mail_index=self.add_index_switch.isChecked())}')
     
-    def mousePressEvent(self, event):
-        if event.button() != Qt.MouseButton.LeftButton:
-            return
-        if self.ll is None or self.spn is None:
-            return
-        pos = event.position().toPoint()
+    def _click_to_ll(self, pos):
         label_geom = self.image_label.geometry()
         if not label_geom.contains(pos):
-            return
+            return None
         x = pos.x() - label_geom.x()
         y = pos.y() - label_geom.y()
         w = label_geom.width()
@@ -138,11 +133,33 @@ class Window(QMainWindow):
         spn_x, spn_y = map(float, self.spn.split(','))
         new_lon = center_lon + (x - w / 2) / w * spn_x
         new_lat = center_lat - (y - h / 2) / h * spn_y
-        new_ll = f'{new_lon},{new_lat}'
-        self.marks = [f'{new_ll},pm2dgl']
-        new_image = image_from_params(ll=self.ll, spn=self.spn, theme=self.theme, pt='~'.join(self.marks))
-        self.set_image(new_image)
-        self.full_address.setText(f'Полный адрес: {full_adderss_from_geocode(new_ll, add_mail_index=self.add_index_switch.isChecked())}')
+        return f'{new_lon},{new_lat}'
+
+    def mousePressEvent(self, event):
+        if self.ll is None or self.spn is None:
+            return
+        button = event.button()
+        if button not in (Qt.MouseButton.LeftButton, Qt.MouseButton.RightButton):
+            return
+        new_ll = self._click_to_ll(event.position().toPoint())
+        if new_ll is None:
+            return
+        if button == Qt.MouseButton.LeftButton:
+            self.marks = [f'{new_ll},pm2dgl']
+            new_image = image_from_params(ll=self.ll, spn=self.spn, theme=self.theme, pt='~'.join(self.marks))
+            self.set_image(new_image)
+            self.full_address.setText(f'Полный адрес: {full_adderss_from_geocode(new_ll, add_mail_index=self.add_index_switch.isChecked())}')
+        else:
+            self.address_edit.setText('')
+            self.full_address.setText('')
+            self.marks = ['']
+            org = organization_at_point(new_ll)
+            if org is not None:
+                name, address, org_ll = org
+                self.marks = [f'{org_ll},pm2dgl']
+                self.full_address.setText(f'{name}, {address}')
+            new_image = image_from_params(ll=self.ll, spn=self.spn, theme=self.theme, pt='~'.join(self.marks))
+            self.set_image(new_image)
         self.setFocus()
 
     def on_clear_marks(self):
